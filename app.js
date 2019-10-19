@@ -79,11 +79,12 @@ function Upload() {
       document.getElementById("addobject").disabled = false;
     }
   ).on('httpUploadProgress', function(progress) {
-      var progress = parseInt((progress.loaded * 100) / progress.total);
+      var progress = (progress.loaded * 100) / progress.total;
+      var progressInt = parseInt(progress)
       console.log("Uploaded :: " + progress +'%');
       $('#progress .progress-bar').css(
             'width',
-            progress + '%'
+            progressInt + '%'
       );
       $(".progress-number").html(getReadableFileSizeString(file.size * progress / 100)+" / "+getReadableFileSizeString(file.size));
   });
