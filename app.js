@@ -1,24 +1,9 @@
 var bucketName = "uploader-test-tomcatling";
 var bucketRegion = "eu-west-2";
 
-AWS.config.update({
-  region: bucketRegion,
-  credentials: new AWS.Credentials({
-    accessKeyId: "xx",
-    secretAccessKey: "xx",
-    sessionToken: null
-  })
-});
+AWS.config.region = bucketRegion;
 AWS.config.httpOptions.timeout = 0;
 AWS.config.logger = console;
-
-var s3 = new AWS.S3({
-  apiVersion: "2006-03-01",
-  useAccelerateEndpoint: true,
-  params: { 
-  	Bucket: bucketName
-  }
-});
 
 
 function getReadableFileSizeString(fileSizeInBytes) {
@@ -32,16 +17,32 @@ function getReadableFileSizeString(fileSizeInBytes) {
     return Math.max(fileSizeInBytes, 0.1).toFixed(1) + byteUnits[i];
 }
 
-
-function addObject() {
+function Upload() {
   var files = document.getElementById("objectupload").files;
   if (!files.length) {
     return alert("Please choose a file to upload first.");
   }
   var file = files[0];
-  var fileName = file.name;
+  var objectKey = file.name;
 
-  var objectKey = fileName;
+  var keyid = document.getElementById("keyid").value;
+  var keysecret = document.getElementById("keysecret").value;
+  var checked = document.getElementById("acceptanceCheck").checked;
+
+  if (keyid === "" || keysecret === "") {
+    return alert("Please enter credentials first.");
+  }
+
+  if (!checked) {
+    return alert("Please confirm that the data being submitted conforms to our guidelines.");
+  }
+
+  var s3 = new AWS.S3({
+    apiVersion: "2006-03-01",
+    useAccelerateEndpoint: true,
+    accessKeyId: keyid,
+    secretAccessKey: keysecret
+  });
 
   $('#progress .progress-bar').css('width',"0px");
   $('#progress .progress-number').text("");
@@ -53,9 +54,19 @@ function addObject() {
       Body: file,
       ACL: "private"
 	},
-	options = {partSize: 1024 * 1024 * 1024, queueSize: 4},
+	options = {
+    partSize: 1024 * 1024 * 1024, 
+    queueSize: 4
+  },
     (err, data) => {
-      console.log('done');
+      if (err){
+        $(".progress-number").html('<font color="red">'+err+'</font>');
+        console.log(err);
+      }
+      else {
+        $(".progress-number").html("Upload complete")
+        console.log('Done.');
+      }
     }
   ).on('httpUploadProgress', function(progress) {
       var progress = parseInt((progress.loaded * 100) / progress.total);
@@ -64,8 +75,7 @@ function addObject() {
             'width',
             progress + '%'
       );
-      $(".progress-number").html(getReadableFileSizeString(file.size * progress / 100)+" / "+getReadableFileSizeString(file.size)).css({'margin-left' : -$('.progress-number').width()/2}
-      );
+      $(".progress-number").html(getReadableFileSizeString(file.size * progress / 100)+" / "+getReadableFileSizeString(file.size));
   });
   
 }
