@@ -10,22 +10,38 @@
   <body>
     <div class="row mt-4">
       <div class="col-md-6 mx-auto">
+        <h2>Data Deposit</h2>
+      </div>
+    </div>
+    <div class="row mb-4">
+      <div class="col-md-6 mx-auto border rounded">
+        <p class="text-left mt-4">
+          This page exists to facilitate submission of files up to 200GB in size.
+        </p>
+      </div>
+    </div>
+    <div class="row mt-4">
+      <div class="col-md-6 mx-auto">
         <h2>Instructions</h2>
       </div>
     </div>
     <div class="row mb-4">
       <div class="col-md-6 mx-auto border rounded">
         <p class="text-left mt-4">
-          You should have been provided with an <b>Access Key ID</b>, <b>Access Key Secret</b>
-          and a correspondence <b>email address</b>. 
+          You should have been provided with an 
+          <ul>
+            <li><b>Access Key ID</b></li>
+            <li><b>Access Key Secret</b></li>
+            <li><b>Email Address</b></li>
+          </ul>
+
+          You will receive a <b>Submission ID</b> from this page following a successful upload.
+
         </p>
         <p class="text-left">
-          Data being submitted should be formatted according to our <a href='#'>submission guidelines</a>.
-        </p>
-        <p class="text-left">
-          Submissions should be placed in an encrypted archive or container created using 7zip or VeraCrypt. 
-          Only '.7z' and '.HC' filetypes will be accepted. The decryption key should be emailed to the 
-          address which has been provided to you, following a successful upload.
+          You should send this Submission ID to the provided email address along with the password
+          required to decrypt your submission. Your submission must be inside an encrypted archive
+          created using 7zip or VeraCrypt, as described by our <a href='#'>submission guidelines</a>.
         </p>
       </div>
     </div>
@@ -37,8 +53,8 @@
     <div class="row mb-4">
       <div class="col-md-6 mx-auto border rounded">
         <div class="custom-file mt-4 mb-2">
-          <input id="objectupload" type="file" accept="*" class="custom-file-input">
-          <label class="custom-file-label" for="objectupload">Choose file</label>
+          <input id="objectupload" type="file" accept=".7z, .HC" class="custom-file-input">
+          <label class="custom-file-label overflow-hidden" for="objectupload">Choose file</label>
         </div>
         <script>
             $('#objectupload').on('change',function(){
