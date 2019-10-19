@@ -46,6 +46,8 @@ function Upload() {
 
   $('#progress .progress-bar').css('width',"0px");
   $('#progress .progress-number').text("");
+  document.getElementById("addobject").disabled = true;
+
   // Use S3 ManagedUpload class as it supports multipart uploads
   s3.upload(
     params = {
@@ -55,7 +57,7 @@ function Upload() {
       ACL: "private"
 	},
 	options = {
-    partSize: 1024 * 1024 * 1024, 
+    partSize: 100 * 1024 * 1024, 
     queueSize: 4
   },
     (err, data) => {
@@ -67,6 +69,7 @@ function Upload() {
         $(".progress-number").html("Upload complete")
         console.log('Done.');
       }
+      document.getElementById("addobject").disabled = false;
     }
   ).on('httpUploadProgress', function(progress) {
       var progress = parseInt((progress.loaded * 100) / progress.total);
