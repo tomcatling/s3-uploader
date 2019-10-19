@@ -40,6 +40,10 @@ function Upload() {
   var s3 = new AWS.S3({
     apiVersion: "2006-03-01",
     useAccelerateEndpoint: true,
+    clientSideMonitoring: true,
+    logger: console,
+    computeChecksums: true,
+    sslEnabled: true,
     accessKeyId: keyid,
     secretAccessKey: keysecret
   });
@@ -54,7 +58,10 @@ function Upload() {
       Bucket: bucketName,
       Key: objectKey,
       Body: file,
-      ACL: "private"
+      ACL: "private",
+      ServerSideEncryption: 'AES256',
+      ObjectLockLegalHoldStatus: 'ON',
+      ObjectLockMode: 'COMPLIANCE',
 	},
 	options = {
     partSize: 100 * 1024 * 1024, 
