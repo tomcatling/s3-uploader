@@ -110,7 +110,9 @@
         <div class="progress-bar progress-bar-success"></div>
         <div class="progress-number"></div>
     </div>
-
+    <div>
+        <canvas id="progressGrid" width=500 height=5></canvas>
+    </div>
 </fieldset>
 <div id='result'>
 
@@ -136,7 +138,7 @@ function upload(file) {
     s3upload.onS3UploadError = function(xhr) {
         $("#result").text("Upload to S3 failed.");
     };
-    s3upload.onProgressChanged = function(uploadedSize, totalSize, speed) {
+    s3upload.onProgressChanged = function(uploadedSize, totalSize, speed, partsInProgress, partsCompleted) {
         var progress = parseInt(uploadedSize / totalSize * 100, 10);
         $('#progress .progress-bar').css(
             'width',
@@ -148,6 +150,29 @@ function upload(file) {
             +" at "
             +getReadableFileSizeString(speed)+"ps"
             +")</span>").css({'margin-left' : -$('.progress-number').width()/2});
+
+
+        var ctx = document.getElementById('progressGrid').getContext('2d');
+
+        ctx.fillStyle = "rgb(200,200,0)";
+        ctx.beginPath();    
+        for (var i = 1; i <= partsInProgress.length; i++) {
+            if (partsInProgress[i]) {
+                ctx.rect (i*5, 0, 4, 4);
+            }
+        }
+        ctx.fill();
+        ctx.closePath();
+
+        ctx.fillStyle = "rgb(0,200,0)";
+        ctx.beginPath();    
+        for (var i = 1; i <= partsCompleted.length; i++) {
+            if (partsCompleted[i]) {
+                ctx.rect (i*5, 0, 4, 4);
+            }
+        }
+        ctx.fill();
+        ctx.closePath();
 
     };
     s3upload.onPrepareCompleted = function() {
