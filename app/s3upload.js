@@ -1,5 +1,5 @@
 function S3MultiUpload(file) {
-    this.PART_SIZE = 1024 * 1024 * 1024;
+    this.PART_SIZE = 100 * 1024 * 1024;
     this.SERVER_LOC = '?'; // Location of the server
     this.completed = false;
     this.file = file;
@@ -17,7 +17,8 @@ function S3MultiUpload(file) {
     this.lastUploadedTime = []
     this.loaded = [];
     this.total = [];
-
+    this.parts = []; // pre-existing parts
+    this.existing = []; // part numbers to skip
 }
 
 /**
@@ -30,44 +31,78 @@ S3MultiUpload.prototype.createMultipartUpload = function() {
         fileInfo: self.fileInfo,
     }).done(function(data) {
         self.sendBackData = data;
+        document.getElementById("uploadId").value = self.sendBackData.uploadId;
+        console.log(self.sendBackData.uploadId)
+        console.log(self.sendBackData.key)
         self.uploadParts();
     }).fail(function(jqXHR, textStatus, errorThrown) {
         self.onServerError('create', jqXHR, textStatus, errorThrown);
     });
 };
 
-/**
- * Call this function to start uploading to server
- */
-S3MultiUpload.prototype.start = function() {
-    this.createMultipartUpload();
+
+/** private */
+S3MultiUpload.prototype.resumeMultipartUpload = function(uploadId) {
+    var self = this;
+    self.sendBackData = {
+        key: 'upload/' + self.file.name,
+        uploadId: uploadId
+    };
+
+    $.post(self.SERVER_LOC, {
+        command: 'listparts',
+        sendBackData: self.sendBackData
+    }).done(function(data) {
+        console.log(data)
+        if (data.parts) {
+            self.parts = data.parts
+        }
+
+        for (var i = 0; i < self.parts.length; i++) {
+            self.loaded[self.parts[i].PartNumber] = self.parts[i].Size
+            self.total[self.parts[i].PartNumber] = self.parts[i].Size
+        }
+
+        self.uploadParts();
+
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        self.onServerError('listparts', jqXHR, textStatus, errorThrown);
+    });
 };
 
 /** private */
 S3MultiUpload.prototype.uploadParts = function() {
     var blobs = this.blobs = [], promises = [];
+    var partNumbers = this.partNumbers = []
     var start = 0;
-    var parts =0;
     var end, blob;
     var partNum = 0;
+    var existing = []
+
+    for (var i = 0; i < this.parts.length; i++) {
+        existing.push(this.parts[i].PartNumber)
+    }
+
 
     while(start < this.file.size) {
         end = Math.min(start + this.PART_SIZE, this.file.size);
 		filePart = this.file.slice(start, end);
         // this is to prevent push blob with 0Kb
-        if (filePart.size > 0)
+        if (filePart.size > 0 && !existing.includes(partNum+1)) {
+            
             blobs.push(filePart);
-        start = this.PART_SIZE * ++partNum;
-    }
+            partNumbers.push(partNum+1)
 
-    for (var i = 0; i < blobs.length; i++) {
-        blob = blobs[i];
-        promises.push(this.uploadXHR[i]=$.post(this.SERVER_LOC, {
-            command: 'part',
-            sendBackData: this.sendBackData,
-            partNumber: i+1,
-            contentLength: blob.size
-        }));
+            console.log('Getting presigned URL for part ' + (partNum+1))
+            promises.push(this.uploadXHR[i]=$.post(this.SERVER_LOC, {
+                command: 'part',
+                sendBackData: this.sendBackData,
+                partNumber: partNum+1,
+                contentLength: filePart.size
+            }));
+
+        }
+        start = this.PART_SIZE * ++partNum;
     }
     $.when.apply(null, promises)
      .then(this.sendAll.bind(this), this.onServerError)
@@ -80,10 +115,16 @@ S3MultiUpload.prototype.uploadParts = function() {
 S3MultiUpload.prototype.sendAll = function() {
     var blobs = this.blobs;
     var length = blobs.length;
-    if (length==1)
-        this.sendToS3(arguments[0], blobs[0], 0);
-    else for (var i = 0; i < length; i++) {
-        this.sendToS3(arguments[i][0], blobs[i], i);
+    var data = Array.from(arguments)
+
+    if (length==1) {
+        console.log("Sending object")
+        this.sendToS3(data[0], blobs[0], 0, 1);
+    } else {
+        for (var i = 0; i < length; i++) {
+            console.log("Sending part " + this.partNumbers[i])
+            this.sendToS3(data[i][0], blobs[i], i, this.partNumbers[i]);
+        }
     }
 };
 /**
@@ -92,7 +133,7 @@ S3MultiUpload.prototype.sendAll = function() {
  * @param  blob blob  data bytes
  * @param  integer index part index (base zero)
  */
-S3MultiUpload.prototype.sendToS3 = function(data, blob, index) {
+S3MultiUpload.prototype.sendToS3 = function(data, blob, index, partNumber) {
     var self = this;
     var url = data['url'];
     var size = blob.size;
@@ -111,24 +152,24 @@ S3MultiUpload.prototype.sendToS3 = function(data, blob, index) {
 
     request.upload.onprogress = function(e) {
         if (e.lengthComputable) {
-            self.total[index] = size;
-            self.loaded[index] = e.loaded;
-            if (self.lastUploadedTime[index])
+            self.total[partNumber] = size;
+            self.loaded[partNumber] = e.loaded;
+            if (self.lastUploadedTime[partNumber])
             {
-                var time_diff=(new Date().getTime() - self.lastUploadedTime[index])/1000;
+                var time_diff=(new Date().getTime() - self.lastUploadedTime[partNumber])/1000;
                 if (time_diff > 0.005) // 5 miliseconds has passed
                 {
-                    var byterate=(self.loaded[index] - self.lastUploadedSize[index])/time_diff;
-                    self.byterate[index] = byterate; 
-                    self.lastUploadedTime[index]=new Date().getTime();
-                    self.lastUploadedSize[index]=self.loaded[index];
+                    var byterate=(self.loaded[partNumber] - self.lastUploadedSize[partNumber])/time_diff;
+                    self.byterate[partNumber] = byterate; 
+                    self.lastUploadedTime[partNumber]=new Date().getTime();
+                    self.lastUploadedSize[partNumber]=self.loaded[partNumber];
                 }
             }
             else 
             {
-                self.byterate[index] = 0; 
-                self.lastUploadedTime[index]=new Date().getTime();
-                self.lastUploadedSize[index]=self.loaded[index];
+                self.byterate[partNumber] = 0; 
+                self.lastUploadedTime[partNumber]=new Date().getTime();
+                self.lastUploadedSize[partNumber]=self.loaded[partNumber];
             }
             // Only send update to user once, regardless of how many
             // parallel XHRs we have (unless the first one is over).
@@ -191,8 +232,9 @@ S3MultiUpload.prototype.updateProgress = function() {
             complete=0;
         }
     }
-    if (complete)
-    	this.completeMultipartUpload();
+    if (complete) {
+        this.completeMultipartUpload();
+    }
     total=this.fileInfo.size;
     this.onProgressChanged(loaded, total, byterate);
 };

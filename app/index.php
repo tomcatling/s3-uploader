@@ -134,9 +134,21 @@ if (isset($_POST['command']))
 		]);
 	 	json_output(array(
                'uploadId' => $res->get('UploadId'),
-                'key' => $res->get('Key'),
+               'key' => $res->get('Key'),
         ));
 	}
+
+    if ($command=="listparts")
+    {
+        $partsModel = s3("listParts",[
+            'Bucket' => bucket(),
+            'Key' => $_REQUEST['sendBackData']['key'],
+            'UploadId' => $_REQUEST['sendBackData']['uploadId'],
+        ]);
+        json_output(array(
+               'parts' => $partsModel['Parts'],
+        ));
+    }
 
 	if ($command=="part")
 	{
@@ -165,11 +177,11 @@ if (isset($_POST['command']))
         if (!isset($partsModel['Parts']))
         {
             sleep(2);
-                $partsModel = s3("listParts",[
-                    'Bucket' => bucket(),
-                    'Key' => $_REQUEST['sendBackData']['key'],
-                    'UploadId' => $_REQUEST['sendBackData']['uploadId'],
-                ]);
+            $partsModel = s3("listParts",[
+                'Bucket' => bucket(),
+                'Key' => $_REQUEST['sendBackData']['key'],
+                'UploadId' => $_REQUEST['sendBackData']['uploadId'],
+            ]);
         }
         $model = s3("completeMultipartUpload",[
             'Bucket' => bucket(),
@@ -185,14 +197,14 @@ if (isset($_POST['command']))
 	}
 	if ($command=="abort")
 	{
-		 $model = s3("abortMultipartUpload",[
-            'Bucket' => bucket(),
-            'Key' => $_REQUEST['sendBackData']['key'],
-            'UploadId' => $_REQUEST['sendBackData']['uploadId']
-        ]);
-        json_output([
-            'success' => true
-        ]);
+		// $model = s3("abortMultipartUpload",[
+        //    'Bucket' => bucket(),
+        //    'Key' => $_REQUEST['sendBackData']['key'],
+        //    'UploadId' => $_REQUEST['sendBackData']['uploadId']
+        //]);
+        //json_output([
+        //    'success' => true
+        //]);
 	}
 
 	exit(0);

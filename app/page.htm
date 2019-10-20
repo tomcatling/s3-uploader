@@ -48,9 +48,7 @@
 	-o-transition: width .6s ease;
 	transition: width .6s ease;
 }
-#uploadForm.is-dragover {
-  background-color: #F7F7F7;
-}
+
 .button:focus{color:#fff;background-color:#449d44;border-color:#255625}
 .button:hover{color:#fff;background-color:#449d44;border-color:#398439}
 .button {
@@ -97,7 +95,7 @@
 <p>You can upload files to S3 here.</p>
 <fieldset id='uploadForm' style='padding:20px;'>
 <form>
-    <label for="fileInput" style='padding:15px;position:relative;top:-10px;color:gray;float:right;'>Drop file here to upload</label>
+    <input type="text" id="uploadId" name="uploadId" value=""><br>
     <span class="button fileinput-button">
         <i class="fas fa-plus"></i>
         <span>Select File...</span>
@@ -161,7 +159,14 @@ function upload(file) {
         $(".cancel-button").toggle();
     };
     $("#result").text("Preparing upload...");
-    s3upload.start();
+
+    var uploadId = document.getElementById("uploadId").value
+    if (uploadId === "") {
+        s3upload.createMultipartUpload();
+    } else {
+        s3upload.resumeMultipartUpload(uploadId);
+    }
+    
 }
 
 function getReadableFileSizeString(fileSizeInBytes) {
