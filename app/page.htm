@@ -113,7 +113,7 @@
         <div class="progress-number"></div>
     </div>
     <div>
-        <canvas id="progressGrid" width=500 height=5></canvas>
+        <canvas id="progressGrid" width=800 height=300></canvas>
     </div>
 </fieldset>
 <div id='result'>
@@ -154,27 +154,22 @@ function upload(file) {
             +")</span>").css({'margin-left' : -$('.progress-number').width()/2});
 
 
-        var ctx = document.getElementById('progressGrid').getContext('2d');
-
-        ctx.fillStyle = "rgb(200,200,0)";
-        ctx.beginPath();    
-        for (var i = 1; i <= partsInProgress.length; i++) {
+        var ctx = document.getElementById('progressGrid').getContext('2d'); 
+        console.log(partsInProgress.length)
+        for (var partnum = 1; partnum < partsInProgress.length; partnum++) {
+            var i = partnum - 1
             if (partsInProgress[i]) {
-                ctx.rect (i*5, 0, 4, 4);
+                ctx.fillStyle = "rgb(200,200,0)";
+            } else if (partsCompleted[i]) {
+                ctx.fillStyle = "rgb(0,200,0)";
+            } else {
+                ctx.fillStyle = "rgb(200,200,200)";
             }
+            ctx.beginPath();
+            ctx.rect ((i%159)*5, Math.floor(i/160)*5, 4, 4);
+            ctx.fill();
+            ctx.closePath();
         }
-        ctx.fill();
-        ctx.closePath();
-
-        ctx.fillStyle = "rgb(0,200,0)";
-        ctx.beginPath();    
-        for (var i = 1; i <= partsCompleted.length; i++) {
-            if (partsCompleted[i]) {
-                ctx.rect (i*5, 0, 4, 4);
-            }
-        }
-        ctx.fill();
-        ctx.closePath();
 
     };
     s3upload.onPrepareCompleted = function() {
@@ -218,6 +213,8 @@ $(function(){
         s3upload.cancel();
         $(".fileinput-button").toggle();
         $(".cancel-button").toggle();
+        $("#uploadId").val("");
+        document.getElementById('uploadId').readOnly=false
     });
 })
 

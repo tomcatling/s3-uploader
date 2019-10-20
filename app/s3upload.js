@@ -1,5 +1,5 @@
 function S3MultiUpload(file) {
-    this.PART_SIZE = 50 * 1024 * 1024;
+    this.PART_SIZE = 22 * 1024 * 1024;
     this.SERVER_LOC = '?'; // Location of the server
     this.completed = false;
     this.file = file;
@@ -20,7 +20,6 @@ function S3MultiUpload(file) {
     this.parts = []; // pre-partsCompleted parts
     this.partsCompleted = [];
     this.partsInProgress = [];
-    this.numParts = 0;
 }
 
 Array.prototype.remove = function() {
@@ -99,9 +98,7 @@ S3MultiUpload.prototype.uploadParts = function() {
         
         // this is to prevent push blob with 0Kb
         if (filePart.size > 0) {
-            this.partsInProgress[this.numParts.length+1] = false
-            this.partsCompleted[this.numParts.length+1] = false
-            this.numParts++
+            this.partsInProgress.push(false)
         }
 
         if (filePart.size > 0 && !this.partsCompleted[partNum+1]) {
