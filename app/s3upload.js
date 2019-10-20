@@ -1,5 +1,5 @@
 function S3MultiUpload(file) {
-    this.PART_SIZE = 10 * 1024 * 1024;
+    this.PART_SIZE = 50 * 1024 * 1024;
     this.SERVER_LOC = '?'; // Location of the server
     this.completed = false;
     this.file = file;

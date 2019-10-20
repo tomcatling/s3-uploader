@@ -143,6 +143,7 @@ if (isset($_POST['command']))
         $partsModel = s3("listParts",[
             'Bucket' => bucket(),
             'Key' => $_REQUEST['sendBackData']['key'],
+            'MaxParts' => 10000,
             'UploadId' => $_REQUEST['sendBackData']['uploadId'],
         ]);
         json_output(array(
@@ -169,9 +170,11 @@ if (isset($_POST['command']))
 
 	if ($command=="complete")
 	{
+        sleep(2);
 	 	$partsModel = s3("listParts",[
             'Bucket' => bucket(),
             'Key' => $_REQUEST['sendBackData']['key'],
+            'MaxParts' => 10000,
             'UploadId' => $_REQUEST['sendBackData']['uploadId'],
         ]);
         if (!isset($partsModel['Parts']))
@@ -180,6 +183,7 @@ if (isset($_POST['command']))
             $partsModel = s3("listParts",[
                 'Bucket' => bucket(),
                 'Key' => $_REQUEST['sendBackData']['key'],
+                'MaxParts' => 10000,
                 'UploadId' => $_REQUEST['sendBackData']['uploadId'],
             ]);
         }
