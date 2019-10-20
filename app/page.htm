@@ -158,9 +158,9 @@ function upload(file) {
         console.log(partsInProgress.length)
         for (var partnum = 1; partnum < partsInProgress.length; partnum++) {
             var i = partnum - 1
-            if (partsInProgress[i]) {
+            if (partsInProgress[partnum]) {
                 ctx.fillStyle = "rgb(200,200,0)";
-            } else if (partsCompleted[i]) {
+            } else if (partsCompleted[partnum]) {
                 ctx.fillStyle = "rgb(0,200,0)";
             } else {
                 ctx.fillStyle = "rgb(200,200,200)";
