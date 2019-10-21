@@ -18,8 +18,8 @@ function S3MultiUpload(file) {
     this.loaded = [];
     this.total = [];
     this.parts = []; // pre-partsCompleted parts
-    this.partsCompleted = [];
-    this.partsInProgress = [];
+    this.partsCompleted = [false];
+    this.partsInProgress = [false];
 }
 
 Array.prototype.remove = function() {
@@ -41,6 +41,7 @@ S3MultiUpload.prototype.createMultipartUpload = function() {
     $.post(self.SERVER_LOC, {
         command: 'create',
         fileInfo: self.fileInfo,
+        key: self.file.lastModified + self.file.name
     }).done(function(data) {
         self.sendBackData = data;
         document.getElementById("uploadId").value = self.sendBackData.uploadId;
@@ -57,17 +58,18 @@ S3MultiUpload.prototype.createMultipartUpload = function() {
 S3MultiUpload.prototype.resumeMultipartUpload = function(uploadId) {
     var self = this;
     self.sendBackData = {
-        key: 'upload/' + self.file.name,
-        uploadId: uploadId
+        uploadId: uploadId,
+        key: self.file.lastModified + self.file.name
     };
 
     $.post(self.SERVER_LOC, {
         command: 'listparts',
         sendBackData: self.sendBackData
     }).done(function(data) {
-        //console.log(data)
+        
         if (data.parts) {
             var parts = data.parts
+            console.log(parts)
         }
 
         for (var i = 0; i < parts.length; i++) {
@@ -99,12 +101,12 @@ S3MultiUpload.prototype.uploadParts = function() {
         // this is to prevent push blob with 0Kb
         if (filePart.size > 0) {
             this.partsInProgress.push(false)
+            partNumbers.push(partNum+1)
         }
 
         if (filePart.size > 0 && !this.partsCompleted[partNum+1]) {
             
             blobs.push(filePart);
-            partNumbers.push(partNum+1)
 
             //console.log('Getting presigned URL for part ' + (partNum+1))
             promises.push(this.uploadXHR[filePart]=$.post(this.SERVER_LOC, {
@@ -120,6 +122,9 @@ S3MultiUpload.prototype.uploadParts = function() {
     $.when.apply(null, promises)
      .then(this.sendAll.bind(this), this.onServerError)
      .done(this.onPrepareCompleted);
+
+     console.log(this.partsInProgress)
+     console.log(this.partNumbers)
 };
 
 /**

@@ -23,13 +23,7 @@ else
         return "YOUR_S3_REGION";
     }
 }
-/**
- * The key perfix in the bucket to put all uploads in
- * @return string
- */
-function prefix() {
-    return "upload/";
-}
+
 /**
  * Easy wrapper around S3 API
  * @param  string $command the function to call
@@ -128,7 +122,7 @@ if (isset($_POST['command']))
 	{
 		$res=s3("createMultipartUpload",[
 			'Bucket' => bucket(),
-            'Key' => prefix().$_POST['fileInfo']['name'],
+            'Key' => $_REQUEST['key'],
             'ContentType' => $_REQUEST['fileInfo']['type'],
             'Metadata' => $_REQUEST['fileInfo']
 		]);
