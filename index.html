@@ -4,20 +4,10 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.0.0/jquery.min.js"></script>
     <script src="https://sdk.amazonaws.com/js/aws-sdk-2.553.0.min.js"></script>
-    <script src="./app.js"></script>
-    <script>
-      function on() {
-        document.getElementById("overlay").style.display = "block";
-      }
-
-      function off() {
-        document.getElementById("overlay").style.display = "none";
-      }
-    </script>
     <style>
     #overlay {
       position: absolute; /* Sit on top of the page content */
-      display: block; /* Hidden by default */
+      display: none; /* Hidden by default */
       width: 100%; /* Full width (cover the whole page) */
       height: 100%; /* Full height (cover the whole page) */
       top: 0;
@@ -63,7 +53,7 @@
     </div>
     <div class="row mb-4">
       <div class="col-md-6 mx-auto border rounded">
-        <div id="overlay">
+        <div id="overlay" class="border rounded pt-4">
           <center>
             <font color="white">Your upload is in progress, please do not navigate away from this page.</font>
           </center>
@@ -97,11 +87,167 @@
         <div class="form-group">
           <button id="addobject" onclick="Upload()" class="btn btn-primary">Upload</button>
         </div>
-        <div id="progress" class="progress">
+      </div>
+    </div>
+    <div class="row mb-4">
+      <div class="col-md-6 mx-auto border rounded">
+        <div id="progress" class="progress mt-2">
           <div class="progress-bar progress-bar-success"></div>
         </div>
-        <div class="progress-number mb-4">n/a</div>
+        <div class="progress-number mb-2">n/a</div>
       </div>
     </div>
   </body>
 </html>
+
+<script>
+  var bucketName = "uploader-test-tomcatling";
+  var bucketRegion = "eu-west-2";
+
+  AWS.config.region = bucketRegion;
+  AWS.config.logger = console;
+
+
+  function getReadableFileSizeString(fileSizeInBytes) {
+      var i = -1;
+      var byteUnits = [' KB', ' MB', ' GB', ' TB', 'PB', 'EB', 'ZB', 'YB'];
+      do {
+          fileSizeInBytes = fileSizeInBytes / 1024;
+          i++;
+      } while (fileSizeInBytes > 1024);
+
+      return Math.max(fileSizeInBytes, 0.1).toFixed(1) + byteUnits[i];
+  }
+
+  function fixFilename(username, filename) {
+    var cleanfilename = filename.replace(/[^a-zA-Z0-9\.\-\_]+/g,"");
+    return username + '/' + cleanfilename
+  }
+
+  function validateInputs() {
+    var files = document.getElementById("objectupload").files;
+    if (!files.length) {
+      return "Please choose a file to upload first.";
+    }
+
+    var keyid = document.getElementById("keyid").value;
+    var keysecret = document.getElementById("keysecret").value;
+    var checked = document.getElementById("acceptanceCheck").checked;
+
+    if (keyid === "" || keysecret === "") {
+      return "Please enter credentials first.";
+    }
+
+    if (!checked) {
+      return "Please confirm that the data being submitted conforms to our guidelines.";
+    }
+
+  }
+
+  function lockForm() {
+    document.getElementById("overlay").style.display = 'block';
+  }
+
+  function unlockForm() {
+    document.getElementById("overlay").style.display = 'none';
+  }
+
+  function Upload() {
+
+    lockForm();
+
+    var msg = validateInputs()
+    if (msg) {return alert(msg);}
+
+    var file = document.getElementById("objectupload").files[0];
+    var keyid = document.getElementById("keyid").value;
+    var keysecret = document.getElementById("keysecret").value;
+
+    var sts = new AWS.STS(
+      options = {
+        sslEnabled: true,
+        clientSideMonitoring: true,
+        logger: console,
+        accessKeyId: keyid,
+        secretAccessKey: keysecret
+      }
+    );
+
+    var promise = sts.getCallerIdentity().promise();
+
+    // handle promise's fulfilled/rejected states
+    promise.then(
+      function(data) {
+        var username = data.Arn.split('/').slice(-1)[0]
+        var objectKey = fixFilename(username, file.name);
+
+        var s3 = new AWS.S3({
+          apiVersion: "2006-03-01",
+          useAccelerateEndpoint: true,
+          clientSideMonitoring: true,
+          logger: console,
+          computeChecksums: true,
+          sslEnabled: true,
+          accessKeyId: keyid,
+          secretAccessKey: keysecret
+        });
+
+        $('#progress .progress-bar').css('width',"0px");
+        $('#progress .progress-number').text("");
+        lockForm();
+
+        // Use S3 ManagedUpload class as it supports multipart uploads
+        s3.upload(
+        params = {
+          Bucket: bucketName,
+          Key: objectKey,
+          Body: file,
+          ACL: "private",
+          ServerSideEncryption: 'AES256',
+        },
+        options = {
+          partSize: Math.max(file.size / 1000, 5 * 1024 * 1024),
+          queueSize: 4
+        },
+          (err, data) => {
+            if (err){
+              unlockForm();
+              $(".progress-number").html(
+                '<font color="red">'
+                + err
+                + '</font>');
+              console.log(err);
+            }
+            else {
+              unlockForm();
+              $(".progress-number").html(
+                'Upload complete. <br> Object has the key: <font color="red">' 
+                + bucketName 
+                + '/' 
+                + objectKey 
+                +'</font>'
+                )
+            }
+            document.getElementById("addobject").disabled = false;
+          }
+        ).on('httpUploadProgress', function(progress) {
+            console.log(progress.loaded )
+            var progress = (progress.loaded * 100) / progress.total;
+            var progressInt = parseInt(progress)
+            $('#progress .progress-bar').css('width',progressInt + '%');
+            $(".progress-number").html(
+              getReadableFileSizeString(file.size * progress / 100)+" / "+getReadableFileSizeString(file.size)
+              );
+        });
+
+
+      },
+      function(error) {
+        unlockForm();
+        return alert("Cannot validate credentials.");
+      }
+    );
+
+    
+  }
+</script>

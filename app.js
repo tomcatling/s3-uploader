@@ -42,19 +42,11 @@ function validateInputs() {
 }
 
 function lockForm() {
-  document.getElementById("addobject").disabled = true;
-  document.getElementById('objectupload').readOnly = true;
-  document.getElementById('keyid').readOnly = true;
-  document.getElementById('keysecret').readOnly = true;
-  document.getElementById('acceptanceCheck').onClick = function(){ return false};
+  document.getElementById("overlay").style.display = 'block';
 }
 
 function unlockForm() {
-  document.getElementById("addobject").disabled = false;
-  document.getElementById('objectupload').readOnly = false;
-  document.getElementById('keyid').readOnly = false;
-  document.getElementById('keysecret').readOnly = false;
-  document.getElementById('acceptanceCheck').onClick = null;
+  document.getElementById("overlay").style.display = 'none';
 }
 
 function Upload() {
