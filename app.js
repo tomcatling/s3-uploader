@@ -2,7 +2,6 @@ var bucketName = "uploader-test-tomcatling";
 var bucketRegion = "eu-west-2";
 
 AWS.config.region = bucketRegion;
-AWS.config.httpOptions.timeout = 0;
 AWS.config.logger = console;
 
 
@@ -17,7 +16,6 @@ function getReadableFileSizeString(fileSizeInBytes) {
     return Math.max(fileSizeInBytes, 0.1).toFixed(1) + byteUnits[i];
 }
 
-
 function fixFilename(username, filename) {
   var cleanfilename = filename.replace(/[^a-zA-Z0-9\.\-\_]+/g,"");
   return username + '/' + cleanfilename
@@ -27,12 +25,6 @@ function validateInputs() {
   var files = document.getElementById("objectupload").files;
   if (!files.length) {
     return "Please choose a file to upload first.";
-  }
-  
-  var file = files[0];
-
-  if (file.size/1024/1024/1024 > 200) {
-    return "This file is too large. Individual submissions must be < 200GB.";
   }
 
   var keyid = document.getElementById("keyid").value;
@@ -49,7 +41,25 @@ function validateInputs() {
 
 }
 
+function lockForm() {
+  document.getElementById("addobject").disabled = true;
+  document.getElementById('objectupload').readOnly = true;
+  document.getElementById('keyid').readOnly = true;
+  document.getElementById('keysecret').readOnly = true;
+  document.getElementById('acceptanceCheck').onClick = function(){ return false};
+}
+
+function unlockForm() {
+  document.getElementById("addobject").disabled = false;
+  document.getElementById('objectupload').readOnly = false;
+  document.getElementById('keyid').readOnly = false;
+  document.getElementById('keysecret').readOnly = false;
+  document.getElementById('acceptanceCheck').onClick = null;
+}
+
 function Upload() {
+
+  lockForm();
 
   var msg = validateInputs()
   if (msg) {return alert(msg);}
@@ -89,7 +99,7 @@ function Upload() {
 
       $('#progress .progress-bar').css('width',"0px");
       $('#progress .progress-number').text("");
-      document.getElementById("addobject").disabled = true;
+      lockForm();
 
       // Use S3 ManagedUpload class as it supports multipart uploads
       s3.upload(
@@ -101,34 +111,44 @@ function Upload() {
         ServerSideEncryption: 'AES256',
       },
       options = {
-        partSize: 25 * 1024 * 1024, 
-        queueSize: 6
+        partSize: Math.max(file.size / 1000, 5 * 1024 * 1024),
+        queueSize: 4
       },
         (err, data) => {
           if (err){
-            $(".progress-number").html('<font color="red">'+err+'</font>');
+            unlockForm();
+            $(".progress-number").html(
+              '<font color="red">'
+              + err
+              + '</font>');
             console.log(err);
           }
           else {
-            $(".progress-number").html('Upload complete. <br> Your submission ID is: <font color="red">' + objectKey +'</font>')
-            console.log('Done.');
+            unlockForm();
+            $(".progress-number").html(
+              'Upload complete. <br> Object has the key: <font color="red">' 
+              + bucketName 
+              + '/' 
+              + objectKey 
+              +'</font>'
+              )
           }
           document.getElementById("addobject").disabled = false;
         }
       ).on('httpUploadProgress', function(progress) {
+          console.log(progress.loaded )
           var progress = (progress.loaded * 100) / progress.total;
           var progressInt = parseInt(progress)
-          console.log("Uploaded :: " + progress +'%');
-          $('#progress .progress-bar').css(
-                'width',
-                progressInt + '%'
-          );
-          $(".progress-number").html(getReadableFileSizeString(file.size * progress / 100)+" / "+getReadableFileSizeString(file.size));
+          $('#progress .progress-bar').css('width',progressInt + '%');
+          $(".progress-number").html(
+            getReadableFileSizeString(file.size * progress / 100)+" / "+getReadableFileSizeString(file.size)
+            );
       });
 
 
     },
     function(error) {
+      unlockForm();
       return alert("Cannot validate credentials.");
     }
   );

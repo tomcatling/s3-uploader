@@ -5,21 +5,32 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.0.0/jquery.min.js"></script>
     <script src="https://sdk.amazonaws.com/js/aws-sdk-2.553.0.min.js"></script>
     <script src="./app.js"></script>
+    <script>
+      function on() {
+        document.getElementById("overlay").style.display = "block";
+      }
 
+      function off() {
+        document.getElementById("overlay").style.display = "none";
+      }
+    </script>
+    <style>
+    #overlay {
+      position: absolute; /* Sit on top of the page content */
+      display: block; /* Hidden by default */
+      width: 100%; /* Full width (cover the whole page) */
+      height: 100%; /* Full height (cover the whole page) */
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0,0,0,0.8); /* Black background with opacity */
+      z-index: 10; /* Specify a stack order in case you're using a different order for other elements */
+      cursor: pointer; /* Add a pointer on hover */
+    }
+  </style>
   </head>
   <body>
-    <div class="row mt-4">
-      <div class="col-md-6 mx-auto">
-        <h2>Data Deposit</h2>
-      </div>
-    </div>
-    <div class="row mb-4">
-      <div class="col-md-6 mx-auto border rounded">
-        <p class="text-left mt-4">
-          This page exists to facilitate submission of files up to 200GB in size.
-        </p>
-      </div>
-    </div>
     <div class="row mt-4">
       <div class="col-md-6 mx-auto">
         <h2>Instructions</h2>
@@ -35,13 +46,13 @@
             <li><b>Email Address</b></li>
           </ul>
 
-          You will receive a <b>Submission ID</b> from this page following a successful upload.
+          You will receive an <b>Object Key</b> from this page following a successful upload.
 
         </p>
         <p class="text-left">
           You should send this Submission ID to the provided email address along with the password
           required to decrypt your submission. Your submission must be inside an encrypted archive
-          created using 7zip or VeraCrypt, as described by our <a href='#'>submission guidelines</a>.
+          created using 7zip.
         </p>
       </div>
     </div>
@@ -52,6 +63,11 @@
     </div>
     <div class="row mb-4">
       <div class="col-md-6 mx-auto border rounded">
+        <div id="overlay">
+          <center>
+            <font color="white">Your upload is in progress, please do not navigate away from this page.</font>
+          </center>
+        </div>
         <div class="custom-file mt-4 mb-2">
           <input id="objectupload" type="file" accept="*" class="custom-file-input">
           <label class="custom-file-label overflow-hidden" for="objectupload">Choose file</label>
