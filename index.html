@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <title>S3 Uploader</title>
     <link rel="shortcut icon" href="data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAjMYwAIS+IACAuhRUlM5B9KDaawys6ouYtPKf3Lj2q/i49qv4tPKf3Kzqi5ig2msMkM5B9IC6FFSEviAAjMYwAJjSTADRDuQAvPqxkN0bD/T5N1P9BUNr/QFDd/0JR3v9DUt7/QlHd/0BP2v8/TdT/OUfE/S8+rGQ0Q7kAJjSTACIwigAAAAABOUjLnlhm5P+rsvL/tLrz/2Rw5v9BUOD/UV/i/6at8f+4vvT/qrHy/1Ri4/85SMueAAAAASIwigArOaEAKjieETxL0s2jq/D///////////+9w/T/RVTg/0VT4P+ttPH//////7e98/9HVuH/PUzSzSo4nhErOaEANEK4ADNBtjI+TdjtnaXv////////////tbvz/0VT4P9BUOD/X2zl/83R9/9mcub/QVDg/0BP2O4zQbYyNEK4AD5N1AA3RsJgQVDc/lFf4/+Xn+7/n6bv/1dl4/8/Tt//QE/f/0JR4P9baOT/RVTg/0NS4P9CUd3+N0bCYD5N1AD///8AO0rKlUNS3/9CUeD/QFDg/0RT4P9ve+f/fIbp/3yH6f9jb+X/QVDg/0NS4P9DUuD/Q1Lf/ztKypb///8AKDaZED5M0sZDUuD/Q1Lg/0JR4P9PXeL/2Nv5//7+////////rLPx/0JR4P9DUuD/Q1Lg/0NS4P8+TNLGKDaZEDJBtDNAT9joQ1Lg/0NS4P9CUeD/T13i/9zf+f///////////6+18v9CUeD/Q1Lg/0NS4P9DUuD/QE/Y6DJBtDM3RsBnQVDc+0NS4P9DUuD/QlHg/05c4v/N0ff/8PH8//Hy/f+krPD/QlHg/0NS4P9DUuD/Q1Lg/0FQ3Ps3RsBnOknJpENS3/9DUuD/Q1Lh/kNS4fdGVOLwXmvm62Vx5+hlcefoVmTl60NS4fBDU+H3Q1Lh/kNS4P9DUt//OknJpD1M0s9DUt/NP07VqDlIxpY0QriRMD6ukSs6qJMqOKaUKjimlCw7qZMwP66RNEK4kTlIxpY/TtWoQ1LfzT5M0s8wP6+RKjmfrCw6o84wPq3lM0G28jVEvPk3RcD8N0bB/TdGwf03RcD8NUS8+TNBtvIwPq3lLDqjzio5n6wwP6+RNEK47j1Lz/9BUNv/Q1Lf/0NS4f9EU+H/RFPh/0RT4f9EU+H/RFPh/0RT4f9DUuH/Q1Lf/0FQ2/89S8//NEK47kNS4LdDUuHxQ1Lg/0NS4P9DUuD/Q1Lg/0NS4P9DUuD/Q1Lg/0NS4P9DUuD/Q1Lg/0NS4P9DUuD/Q1Lh8UNS4LdDUuEPQ1LgSENS4IdDUuC2Q1Lg1UNS4OlDUuD0Q1Lg+UNS4PlDUuD0Q1Lg6UNS4NVDUuC2Q1Lgh0NS4EhDUuEPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==" />
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.0.0/jquery.min.js"></script>
@@ -93,6 +94,14 @@
         </div>
       </div>
     </div>
+    <footer class="page-footer font-small blue pt-4">
+      <p class="small">
+        <i>
+          This page uses the Javascript AWS SDK to initiate a multipart upload directly between your device and AWS
+          S3. Your browser must have Javascript enabled, and you must have network access to reach S3.
+        </i>
+      </p>
+    </footer>
   </div>
   </body>
 </html>
