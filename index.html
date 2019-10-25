@@ -105,7 +105,6 @@
   var bucketRegion = "eu-west-2";
 
   AWS.config.region = bucketRegion;
-  AWS.config.logger = console;
   AWS.config.httpOptions.timeout = 0; 
 
 
@@ -155,103 +154,77 @@
 
   function Upload() {
 
-    lockForm();
 
     var msg = validateInputs()
-    if (msg) {return alert(msg);}
+    if (msg) {
+      return alert(msg);
+    }
+
+    lockForm();
 
     var file = document.getElementById("objectupload").files[0];
     var keyid = document.getElementById("keyid").value;
     var keysecret = document.getElementById("keysecret").value;
+    var objectKey = file.name;
 
-    var sts = new AWS.STS(
-      options = {
-        sslEnabled: true,
-        clientSideMonitoring: true,
-        logger: console,
-        accessKeyId: keyid,
-        secretAccessKey: keysecret
-      }
-    );
+    var s3 = new AWS.S3({
+      apiVersion: "2006-03-01",
+      useAccelerateEndpoint: true,
+      clientSideMonitoring: true,
+      computeChecksums: true,
+      sslEnabled: true,
+      accessKeyId: keyid,
+      secretAccessKey: keysecret
+    });
 
-    var promise = sts.getCallerIdentity().promise();
+    $('#progress .progress-bar').css('width',"0px");
+    $('#progress .progress-number').text("");
+    lockForm();
 
-    // handle promise's fulfilled/rejected states
-    promise.then(
-      function(data) {
-        var username = data.Arn.split('/').slice(-1)[0]
-        var objectKey = fixFilename(username, file.name);
+    // Use S3 ManagedUpload class as it supports multipart uploads
+    managedUpload = s3.upload(
+    params = {
+      Bucket: bucketName,
+      Key: objectKey,
+      Body: file,
+      ACL: "private",
+      ServerSideEncryption: 'AES256',
+    },
+    options = {
+      partSize: Math.max(file.size / 1000, 5 * 1024 * 1024),
+      queueSize: 4
+    });
 
-        var s3 = new AWS.S3({
-          apiVersion: "2006-03-01",
-          useAccelerateEndpoint: true,
-          clientSideMonitoring: true,
-          logger: console,
-          computeChecksums: true,
-          sslEnabled: true,
-          accessKeyId: keyid,
-          secretAccessKey: keysecret
-        });
+    managedUpload.on('httpUploadProgress', function(progress) {
+      var progress = (progress.loaded * 100) / file.size;
+      var progressInt = parseInt(progress)
+      lockForm();
+      $('#progress .progress-bar').css('width',progressInt + '%');
+      $(".progress-number").html(
+        getReadableFileSizeString(file.size * progress / 100)+" / "+getReadableFileSizeString(file.size)
+        );
+    });
 
-        $('#progress .progress-bar').css('width',"0px");
-        $('#progress .progress-number').text("");
-        lockForm();
-
-        // Use S3 ManagedUpload class as it supports multipart uploads
-        s3.upload(
-        params = {
-          Bucket: bucketName,
-          Key: objectKey,
-          Body: file,
-          ACL: "private",
-          ServerSideEncryption: 'AES256',
-        },
-        options = {
-          partSize: Math.max(file.size / 1000, 5 * 1024 * 1024),
-          queueSize: 4
-        },
-          (err, data) => {
-            if (err){
-              unlockForm();
-              $(".progress-number").html(
-                '<font color="red">'
-                + err
-                + '</font>');
-              console.log(err);
-              s3.abort()
-            }
-            else {
-              unlockForm();
-              $(".progress-number").html(
-                'Upload complete. <br> Object has the key: <font color="red">' 
-                + bucketName 
-                + '/' 
-                + objectKey 
-                +'</font>'
-                )
-            }
-            document.getElementById("addobject").disabled = false;
-          }
-        ).on('httpUploadProgress', function(progress) {
-            console.log(progress.loaded )
-            console.log(progress.part )
-            console.log(file.size )
-            var progress = (progress.loaded * 100) / file.size;
-            var progressInt = parseInt(progress)
-            $('#progress .progress-bar').css('width',progressInt + '%');
-            $(".progress-number").html(
-              getReadableFileSizeString(file.size * progress / 100)+" / "+getReadableFileSizeString(file.size)
-              );
-        });
-
-
-      },
-      function(error) {
+    managedUpload.send(function (err, data) {
+      if (err){
         unlockForm();
-        return alert("Cannot validate credentials.");
+        $(".progress-number").html(
+          '<font color="red">'
+          + err
+          + '</font>');
+        console.log(err);
+        this.abort()
       }
-    );
-
-    
+      else {
+        unlockForm();
+        $(".progress-number").html(
+          'Upload complete. <br> Object has the key: <font color="red">' 
+          + bucketName 
+          + '/' 
+          + objectKey 
+          +'</font>'
+          )
+      }
+    });
   }
 </script>
