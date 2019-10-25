@@ -78,7 +78,7 @@
       <div class="col-md-12 rounded">
         <div class="card card-default">
           <div id="progress" class="progress mx-2 mt-3">
-            <div class="progress-bar progress-bar-success"></div>
+            <div id="progressbar" class="progress-bar bg-info"></div>
           </div>
           <div class="progress-number mx-2 mb-3">&nbsp;</div>
         </div>
@@ -192,6 +192,10 @@
     AWS.config.region = region;
     AWS.config.httpOptions.timeout = 0; 
 
+    document.getElementById("progressbar").className = "progress-bar bg-info";
+    $('#progress .progress-bar').css('width',"0px");
+    $('#progress .progress-number').html('&nbsp;');
+
     var s3 = new AWS.S3({
       apiVersion: "2006-03-01",
       useAccelerateEndpoint: true,
@@ -201,10 +205,6 @@
       accessKeyId: keyid,
       secretAccessKey: keysecret
     });
-
-    $('#progress .progress-bar').css('width',"0px");
-    $('#progress .progress-number').html('&nbsp;');
-    lockForm();
 
     // Use S3 ManagedUpload class as it supports multipart uploads
     thisUpload = s3.upload(
@@ -233,6 +233,7 @@
     thisUpload.send(function (err, data) {
       if (err){
         unlockForm();
+        document.getElementById("progressbar").className = "progress-bar bg-danger";
         $(".progress-number").html(
           '<font color="red">'
           + err
@@ -242,13 +243,8 @@
       }
       else {
         unlockForm();
-        $(".progress-number").html(
-          'Done. Object has the key: <font color="red">' 
-          + bucketName 
-          + '/' 
-          + objectKey 
-          +'</font>'
-          )
+        document.getElementById("progressbar").className = "progress-bar bg-success";
+        $(".progress-number").html('Done.')
       }
     });
   }
