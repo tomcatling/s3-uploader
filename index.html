@@ -5,7 +5,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.0.0/jquery.min.js"></script>
     <script src="https://sdk.amazonaws.com/js/aws-sdk-2.553.0.min.js"></script>
     <style>
-    #overlay {
+    .overlay {
       position: absolute; /* Sit on top of the page content */
       display: none; /* Hidden by default */
       width: 100%; /* Full width (cover the whole page) */
@@ -14,53 +14,27 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background-color: rgba(0,0,0,0.8); /* Black background with opacity */
       z-index: 10; /* Specify a stack order in case you're using a different order for other elements */
-      cursor: pointer; /* Add a pointer on hover */
+      cursor: not-allowed; /* Disabled pointer */
+      background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPSc4JyBoZWlnaHQ9JzgnPgogIDxyZWN0IHdpZHRoPSc4JyBoZWlnaHQ9JzgnIGZpbGw9JyNmZmYnLz4KICA8cGF0aCBkPSdNMCAwTDggOFpNOCAwTDAgOFonIHN0cm9rZS13aWR0aD0nMC41JyBzdHJva2U9JyNhYWEnLz4KPC9zdmc+Cg=="); 
+      background-repeat: repeat; 
+      opacity: 0.3;
     }
   </style>
   </head>
   <body>
-    <div class="row mt-4">
-      <div class="col-md-6 mx-auto">
-        <h2>Instructions</h2>
-      </div>
-    </div>
-    <div class="row mb-4">
-      <div class="col-md-6 mx-auto border rounded">
-        <p class="text-left mt-4">
-          You should have been provided with an 
-          <ul>
-            <li><b>Access Key ID</b></li>
-            <li><b>Access Key Secret</b></li>
-            <li><b>Email Address</b></li>
-          </ul>
-
-          You will receive an <b>Object Key</b> from this page following a successful upload.
-
-        </p>
-        <p class="text-left">
-          You should send this Submission ID to the provided email address along with the password
-          required to decrypt your submission. Your submission must be inside an encrypted archive
-          created using 7zip.
-        </p>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-md-6 mx-auto">
-        <h2>Upload</h2>
-      </div>
-    </div>
-    <div class="row mb-4">
-      <div class="col-md-6 mx-auto border rounded">
-        <div id="overlay" class="border rounded pt-4">
-          <center>
-            <font color="white">Your upload is in progress, please do not navigate away from this page.</font>
-          </center>
-        </div>
-        <div class="custom-file mt-4 mb-2">
-          <input id="objectupload" type="file" accept="*" class="custom-file-input">
-          <label class="custom-file-label overflow-hidden" for="objectupload">Choose file</label>
+  <div class="container" style="max-width: 970px;">
+    <div class="row mb-4 mt-4">
+      <div class="col-md-4 rounded">
+        <div class="card">
+          <div class="card-header">Object</div>
+          <div class="card-body">
+            <div class="rounded pt-4 px-4 overlay"></div>
+            <div class="custom-file">
+              <input id="objectupload" type="file" accept="*" class="custom-file-input">
+              <label class="custom-file-label overflow-hidden" for="objectupload">Choose file</label>
+            </div>
+          </div>
         </div>
         <script>
             $('#objectupload').on('change',function(){
@@ -70,43 +44,65 @@
                 $(this).next('.custom-file-label').html(fileName);
             })
         </script>
-        <div class="form-group">
-          <label for="keyid">Access Key ID:</label>
-          <input type="text" class="form-control" name="keyid" id="keyid">
+      </div>
+      <div class="col-md-4 rounded">
+        <div class="card card-default">
+          <div class="card-header">Destination</div>
+          <div class="card-body">
+            <div class="rounded pt-4 px-4 overlay"></div>
+            <div class="form-group">
+              <label for="region">Region:</label>
+              <input type="text" class="form-control" name="region" id="region">
+              <label for="bucket">Bucket:</label>
+              <input type="text" class="form-control" name="bucket" id="bucket">
+            </div>
+          </div>
         </div>
-        <div class="form-group">
-          <label for="keysecret">Access Key Secret:</label>
-          <input type="password" class="form-control" name="keysecret" id="keysecret">
+      </div>
+      <div class="col-md-4 rounded">
+        <div class="card card-default">
+          <div class="card-header">Credentials</div>
+          <div class="card-body">
+            <div class="rounded pt-4 px-4 overlay"></div>
+            <div class="form-group">
+              <label for="keyid">Access Key ID:</label>
+              <input type="text" class="form-control" name="keyid" id="keyid">
+              <label for="keysecret">Access Key Secret:</label>
+              <input type="password" class="form-control" name="keysecret" id="keysecret">
+            </div>
+          </div>
         </div>
-        <div class="form-check  form-check-inline mb-2">
-          <input class="form-check-input" type="checkbox" value="" id="acceptanceCheck">
-          <label class="form-check-label" for="acceptanceCheck">
-            The data being submitted conforms to the <a href='#'>submission guidelines</a>.
-          </label>
-        </div>
-        <div class="form-group">
-          <button id="addobject" onclick="Upload()" class="btn btn-primary">Upload</button>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12 rounded">
+        <div class="card card-default">
+          <div id="progress" class="progress mx-2 mt-3">
+            <div class="progress-bar progress-bar-success"></div>
+          </div>
+          <div class="progress-number mx-2 mb-3">&nbsp;</div>
         </div>
       </div>
     </div>
     <div class="row mb-4">
-      <div class="col-md-6 mx-auto border rounded">
-        <div id="progress" class="progress mt-2">
-          <div class="progress-bar progress-bar-success"></div>
+      <div class="col-md-4">
+        <div class="form-row mt-1">
+          <button id="addobject" onclick="Upload()" class="btn btn-primary ml-2">Upload</button>
+          <button id="cancelupload" onclick="Abort()" class="btn btn-danger ml-1" disabled>Abort</button>
         </div>
-        <div class="progress-number mb-2">n/a</div>
       </div>
     </div>
+  </div>
   </body>
 </html>
 
+
+
+            
+
 <script>
-  var bucketName = "uploader-test-tomcatling";
-  var bucketRegion = "eu-west-2";
 
-  AWS.config.region = bucketRegion;
-  AWS.config.httpOptions.timeout = 0; 
-
+  var thisUpload = null;
 
   function getReadableFileSizeString(fileSizeInBytes) {
       var i = -1;
@@ -130,26 +126,50 @@
       return "Please choose a file to upload first.";
     }
 
+    var region = document.getElementById("region").value;
+    var bucketName = document.getElementById("bucket").value;
     var keyid = document.getElementById("keyid").value;
     var keysecret = document.getElementById("keysecret").value;
-    var checked = document.getElementById("acceptanceCheck").checked;
 
     if (keyid === "" || keysecret === "") {
       return "Please enter credentials first.";
     }
 
-    if (!checked) {
-      return "Please confirm that the data being submitted conforms to our guidelines.";
+    if (region === "" ) {
+      return "Please enter a region.";
+    }
+
+    if (bucket === "" ) {
+      return "Please enter the name of the target bucket for the upload.";
     }
 
   }
 
   function lockForm() {
-    document.getElementById("overlay").style.display = 'block';
+    //document.getElementById("overlay").style.display = 'block';
+    document.getElementById("addobject").disabled = true;
+    document.getElementById("cancelupload").disabled = false;
+    var x = document.getElementsByClassName("overlay");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      x[i].style.display = 'block';
+    }
   }
 
   function unlockForm() {
-    document.getElementById("overlay").style.display = 'none';
+    //document.getElementById("overlay").style.display = 'none';
+    document.getElementById("addobject").disabled = false;
+    document.getElementById("cancelupload").disabled = true;
+    var x = document.getElementsByClassName("overlay");
+    var i;
+    for (i = 0; i < x.length; i++) {
+      x[i].style.display = 'none';
+    }
+  }
+
+  function Abort() {
+    thisUpload.abort();
+    unlockForm();
   }
 
   function Upload() {
@@ -165,7 +185,12 @@
     var file = document.getElementById("objectupload").files[0];
     var keyid = document.getElementById("keyid").value;
     var keysecret = document.getElementById("keysecret").value;
+    var bucketName = document.getElementById("bucket").value;
+    var region = document.getElementById("region").value;
     var objectKey = file.name;
+
+    AWS.config.region = region;
+    AWS.config.httpOptions.timeout = 0; 
 
     var s3 = new AWS.S3({
       apiVersion: "2006-03-01",
@@ -178,11 +203,11 @@
     });
 
     $('#progress .progress-bar').css('width',"0px");
-    $('#progress .progress-number').text("");
+    $('#progress .progress-number').html('&nbsp;');
     lockForm();
 
     // Use S3 ManagedUpload class as it supports multipart uploads
-    managedUpload = s3.upload(
+    thisUpload = s3.upload(
     params = {
       Bucket: bucketName,
       Key: objectKey,
@@ -195,7 +220,7 @@
       queueSize: 4
     });
 
-    managedUpload.on('httpUploadProgress', function(progress) {
+    thisUpload.on('httpUploadProgress', function(progress) {
       var progress = (progress.loaded * 100) / file.size;
       var progressInt = parseInt(progress)
       lockForm();
@@ -205,7 +230,7 @@
         );
     });
 
-    managedUpload.send(function (err, data) {
+    thisUpload.send(function (err, data) {
       if (err){
         unlockForm();
         $(".progress-number").html(
@@ -218,7 +243,7 @@
       else {
         unlockForm();
         $(".progress-number").html(
-          'Upload complete. <br> Object has the key: <font color="red">' 
+          'Done. Object has the key: <font color="red">' 
           + bucketName 
           + '/' 
           + objectKey 
