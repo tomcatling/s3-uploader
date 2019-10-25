@@ -233,8 +233,6 @@
     thisUpload.on('httpUploadProgress', function(progress) {
       var progress = (progress.loaded * 100) / file.size;
       var progressInt = parseInt(progress)
-      lockForm();
-      document.getElementById("progressbar").className = "progress-bar bg-info";
       $('#progress .progress-bar').css('width',progressInt + '%');
       $(".progress-number").html(
         getReadableFileSizeString(file.size * progress / 100)+" / "+getReadableFileSizeString(file.size)
